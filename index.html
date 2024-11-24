@@ -5,55 +5,158 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Animais para Adoção</title>
     <style>
+        /* Estilo geral da página */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f8f8f8;
+            background:  #f2e7c8;
+            color: #343a40;
+            text-align: center;
         }
+
+        h1 {
+            margin-top: 50px;
+            font-size: 3em;
+            font-weight: 800;
+            color: #343a40;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            background: linear-gradient(45deg, #ff9a8b, #ff6a88);
+            background-clip: text;
+            -webkit-background-clip: text;
+            animation: titleAnimation 2s ease-out;
+        }
+
+        @keyframes titleAnimation {
+            0% { transform: translateY(-50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Estilo para o container dos cartões */
         .container {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            margin: 20px;
+            margin: 40px;
+            gap: 30px;
+            padding: 0 20px;
         }
+
+        /* Estilo para o cartão */
         .card {
             background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin: 10px;
+            border: 3px solid #343a40;
+            border-radius: 15px;
             width: 300px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             overflow: hidden;
+            cursor: pointer;
+            animation: cardAnimation 1s ease-out;
         }
+
+        @keyframes cardAnimation {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Estilo da imagem */
         .card img {
             width: 100%;
-            height: 200px;
+            height: 220px;
             object-fit: cover;
+            transition: transform 0.4s ease;
+            border-bottom: 3px solid #343a40;
         }
+
+        .card img:hover {
+            transform: scale(1.1);
+        }
+
+        /* Corpo do cartão */
         .card-body {
-            padding: 15px;
+            padding: 20px;
+            background: #fff;
+            text-align: left;
+            color: #2c3e50;
         }
+
         .card-body h3 {
-            margin: 0 0 10px;
-            font-size: 1.5em;
-            color: #333;
+            font-size: 1.6em;
+            font-weight: 700;
+            color: #000000;
+            text-transform: capitalize;
+            margin-bottom: 15px;
         }
+
         .card-body p {
-            margin: 5px 0;
+            font-size: 1.1em;
+            margin: 8px 0;
             color: #555;
+        }
+
+        .card-body p strong {
+            font-weight: 600;
+            color: #080808;
+        }
+
+        .card-body p:last-child {
+            font-weight: 500;
+            font-size: 1.1em;
+            color: #ffffff;
+            background: #666666;
+            padding: 5px;
+            border-radius: 8px;
+        }
+
+        /* Estilo de responsividade */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 10px;
+            }
+
+            .card {
+                width: 100%;
+                max-width: 350px;
+            }
+
+            h1 {
+                font-size: 2.5em;
+            }
+        }
+
+        /* Animação de introdução de texto */
+        .intro-text {
+            font-size: 1.2em;
+            margin-top: 30px;
+            color: #343a40;
+            font-weight: 400;
+            animation: fadeInText 3s ease-in-out;
+        }
+
+        @keyframes fadeInText {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
         }
     </style>
 </head>
 <body>
-    <h1 style="text-align:center; color: #333; margin-top: 20px;">Animais para Adoção</h1>
+    <h1>Animais para Adoção</h1>
+    <p class="intro-text">Adote um amigo, transforme uma vida. Descubra os animais incríveis esperando por um lar!</p>
     <div class="container" id="card-container"></div>
 
     <script>
-        const API_KEY = 'AIzaSyBQ_Pl0DJIo2PjVbiLt7Y4jxFmt2aElTbg'; //  chave de API
-        const SPREADSHEET_ID = '16yiIU4qVYeJttLzavSPfW8KYWqRKaccMhKK9TTB3Kbw'; //  ID da  planilha
-        const RANGE = 'A2:k'; // Altere conforme o range usado na planilha
+        const API_KEY = 'AIzaSyAPE4uM6R8o5XP4liMvSC9tCwxwWxnC1Ls'; // Chave de API
+        const SPREADSHEET_ID = '16yiIU4qVYeJttLzavSPfW8KYWqRKaccMhKK9TTB3Kbw'; // ID da planilha
+        const RANGE = 'A2:k'; // Range usado na planilha
 
+        // Função para buscar os dados da planilha
         async function fetchData() {
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${RANGE}?key=${API_KEY}`;
             try {
@@ -65,31 +168,48 @@
             }
         }
 
-        function displayCards(data) {
+        // Função para ajustar o link da foto com o sufixo /view
+        async function getDriveImageUrl(driveLink) {
+            if (driveLink && typeof driveLink === 'string') {
+                const fileId = driveLink.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+                if (fileId && fileId[1]) {
+                    return `https://drive.google.com/file/d/${fileId[1]}/view`;
+                }
+            }
+            return 'https://via.placeholder.com/300x200?text=Sem+Imagem'; // Caso o link não seja válido
+        }
+
+        // Função para exibir os cartões na página
+        async function displayCards(data) {
             const container = document.getElementById('card-container');
             container.innerHTML = ''; // Limpa o container
 
-            data.forEach(row => {
-                const [ data, nome, especie, raca, idade, sexo, vacina, castrado, cond, cor, descr, foto] = row;
+            for (const row of data) {
+                const [ , nome, especie, raca, idade, sexo, vacina, castrado, cond, cor, descr, foto] = row;
 
+                // Ajusta a URL da imagem com o sufixo /view
+                const imageUrl = await getDriveImageUrl(foto);
+
+                // Cria o cartão
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
-                    <img src="${foto}" alt="Foto de ${nome}">
+                    <img src="${imageUrl}" alt="Foto de ${nome}">
                     <div class="card-body">
                         <h3>${nome}</h3>
                         <p><strong>Nome:</strong> ${nome}</p>
                         <p><strong>Espécie:</strong> ${especie}</p>
                         <p><strong>Descrição:</strong> ${cor}</p>
                         <p><strong>Idade:</strong> ${idade}</p>
-                        <p><strong> Castrado:</strong> ${castrado}</p>
-                            
+                        <p><strong>Sexo:</strong> ${sexo}</p>
+                        <p><strong>Castrado:</strong> ${castrado}</p>
                     </div>
                 `;
                 container.appendChild(card);
-            });
+            }
         }
 
+        // Chama a função principal para buscar e exibir os dados
         fetchData();
     </script>
 </body>
