@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Animais para Adoção</title>
     <style>
-        /* Estilo geral da página */
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
-            background:  #f2e7c8;
+            background: #f2e7c8;
             color: #343a40;
             text-align: center;
         }
@@ -20,20 +19,8 @@
             font-size: 3em;
             font-weight: 800;
             color: #343a40;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            background: linear-gradient(45deg, #ff9a8b, #ff6a88);
-            background-clip: text;
-            -webkit-background-clip: text;
-            animation: titleAnimation 2s ease-out;
         }
 
-        @keyframes titleAnimation {
-            0% { transform: translateY(-50px); opacity: 0; }
-            100% { transform: translateY(0); opacity: 1; }
-        }
-
-        /* Estilo para o container dos cartões */
         .container {
             display: flex;
             flex-wrap: wrap;
@@ -43,7 +30,6 @@
             padding: 0 20px;
         }
 
-        /* Estilo para o cartão */
         .card {
             background: #fff;
             border: 3px solid #343a40;
@@ -53,12 +39,6 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             overflow: hidden;
             cursor: pointer;
-            animation: cardAnimation 1s ease-out;
-        }
-
-        @keyframes cardAnimation {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
         }
 
         .card:hover {
@@ -66,97 +46,40 @@
             box-shadow: 0 25px 40px rgba(0, 0, 0, 0.15);
         }
 
-        /* Estilo da imagem */
         .card img {
             width: 100%;
             height: 220px;
-            object-fit: cover;
-            transition: transform 0.4s ease;
+            object-fit: cover; /* Ajusta o tamanho da imagem para preencher o espaço */
             border-bottom: 3px solid #343a40;
         }
 
-        .card img:hover {
-            transform: scale(1.1);
-        }
-
-        /* Corpo do cartão */
         .card-body {
             padding: 20px;
-            background: #fff;
             text-align: left;
-            color: #2c3e50;
         }
 
         .card-body h3 {
             font-size: 1.6em;
             font-weight: 700;
-            color: #000000;
-            text-transform: capitalize;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .card-body p {
             font-size: 1.1em;
-            margin: 8px 0;
-            color: #555;
-        }
-
-        .card-body p strong {
-            font-weight: 600;
-            color: #080808;
-        }
-
-        .card-body p:last-child {
-            font-weight: 500;
-            font-size: 1.1em;
-            color: #ffffff;
-            background: #666666;
-            padding: 5px;
-            border-radius: 8px;
-        }
-
-        /* Estilo de responsividade */
-        @media (max-width: 768px) {
-            .container {
-                padding: 0 10px;
-            }
-
-            .card {
-                width: 100%;
-                max-width: 350px;
-            }
-
-            h1 {
-                font-size: 2.5em;
-            }
-        }
-
-        /* Animação de introdução de texto */
-        .intro-text {
-            font-size: 1.2em;
-            margin-top: 30px;
-            color: #343a40;
-            font-weight: 400;
-            animation: fadeInText 3s ease-in-out;
-        }
-
-        @keyframes fadeInText {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
     <h1>Animais para Adoção</h1>
-    <p class="intro-text">Adote um amigo, transforme uma vida. Descubra os animais incríveis esperando por um lar!</p>
+    <h3>Adote um amigo, ajude uma vida!</h3>
     <div class="container" id="card-container"></div>
-
+    
     <script>
-        const API_KEY = 'AIzaSyAPE4uM6R8o5XP4liMvSC9tCwxwWxnC1Ls'; // Chave de API
+        const API_KEY = 'AIzaSyAPE4uM6R8o5XP4liMvSC9tCwxwWxnC1Ls'; // Substitua pela sua chave de API
         const SPREADSHEET_ID = '16yiIU4qVYeJttLzavSPfW8KYWqRKaccMhKK9TTB3Kbw'; // ID da planilha
-        const RANGE = 'A2:k'; // Range usado na planilha
+        const RANGE = 'A2:K'; // Intervalo na planilha
 
-        // Função para buscar os dados da planilha
         async function fetchData() {
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${RANGE}?key=${API_KEY}`;
             try {
@@ -168,48 +91,43 @@
             }
         }
 
-        // Função para ajustar o link da foto com o sufixo /view
-        async function getDriveImageUrl(driveLink) {
-            if (driveLink && typeof driveLink === 'string') {
-                const fileId = driveLink.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-                if (fileId && fileId[1]) {
-                    return `https://drive.google.com/file/d/${fileId[1]}/view`;
-                }
+        function extractImageId(rawUrl) {
+            // Extrai o ID do link do Google Drive
+            try {
+                let url = new URL(rawUrl);
+                return `https://drive.google.com/thumbnail?id=${url.searchParams.get("id")}`;
+            } catch (err) {
+                console.log(`given url [${rawUrl}]`);
+                console.error(err);
+                return "https://via.placeholder.com/300x220?text=Sem+Imagem";
             }
-            return 'https://via.placeholder.com/300x200?text=Sem+Imagem'; // Caso o link não seja válido
         }
 
-        // Função para exibir os cartões na página
-        async function displayCards(data) {
+        function displayCards(data) {
             const container = document.getElementById('card-container');
             container.innerHTML = ''; // Limpa o container
 
-            for (const row of data) {
-                const [ , nome, especie, raca, idade, sexo, vacina, castrado, cond, cor, descr, foto] = row;
+            data.forEach(row => {
+                const [ _, nome, especie, raca, idade, sexo, vacina, castrado, cond, descr, foto] = row;
 
-                // Ajusta a URL da imagem com o sufixo /view
-                const imageUrl = await getDriveImageUrl(foto);
-
-                // Cria o cartão
                 const card = document.createElement('div');
                 card.className = 'card';
+
                 card.innerHTML = `
-                    <img src="${imageUrl}" alt="Foto de ${nome}">
+                    <img src="${extractImageId(foto)}" alt="pet-image">
                     <div class="card-body">
                         <h3>${nome}</h3>
-                        <p><strong>Nome:</strong> ${nome}</p>
                         <p><strong>Espécie:</strong> ${especie}</p>
-                        <p><strong>Descrição:</strong> ${cor}</p>
+                        <p><strong>Raça:</strong> ${raca}</p>
                         <p><strong>Idade:</strong> ${idade}</p>
                         <p><strong>Sexo:</strong> ${sexo}</p>
                         <p><strong>Castrado:</strong> ${castrado}</p>
                     </div>
                 `;
                 container.appendChild(card);
-            }
+            });
         }
 
-        // Chama a função principal para buscar e exibir os dados
         fetchData();
     </script>
 </body>
